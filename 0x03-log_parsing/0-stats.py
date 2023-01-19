@@ -1,57 +1,42 @@
 #!/usr/bin/python3
-"""
-Read stdin line by line and computes metrics
-Input format: <IP Address> - [<date>] "GET /projects/260 HTTP/1.1"
-<status code> <file size>, skip line if not this format
-After every 10minutes or keyboard interrupt (CTRL + C)
-print these from beginning: number of lines by status code
-possible status codes: 200, 301, 400, 401, 404, 405, and 500
-if status code isn't an integer, do not print it
-format: <status code>: <number>
-Status code must be printed in ascending order
-"""
+"""Python script that reads stdin line by line and computes metrics"""
+
 import sys
 
 
-def print_msg(codes, file_size):
-    print("File size: {}".format(file_size))
-    for key, val in sorted(codes.items()):
-        if val != 0:
-            print("{}: {}".format(key, val))
+def print_n(t_file_size, status):
+    """Prints total file size and status list"""
+    print("File size: {:d}".format(t_file_size))
+    for key, value in sorted(status.items()):
+        if value != 0:
+            print("{}: {}".format(key, value))
 
 
-file_size = 0
-code = 0
-count_lines = 0
-codes = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
+status = {'200': 0, '301': 0, '400': 0, '401': 0,
+          '403': 0, '404': 0, '405': 0, '500': 0}
 
+t_file_size = 0
+count = 0
 try:
     for line in sys.stdin:
-        parsed_line = line.split()
-        parsed_line = parsed_line[::-1]
+        args = line.split()
 
-        if len(parsed_line) > 2:
-            count_lines += 1
+        if len(args) > 2:
+            status_code = args[-2]
+            file_size = int(args[-1])
 
-            if count_lines <= 10:
-                file_size += int(parsed_line[0])
-                code = parsed_line[1]
+            if status_code in status:
+                status[status_code] += 1
 
-                if (code in codes.keys()):
-                    codes[code] += 1
+            t_file_size += file_size
+            count += 1
 
-            if (count_lines == 10):
-                print_msg(codes, file_size)
-                count_lines = 0
+            if count == 10:
+                print_n(t_file_size, status)
+                count = 0
+
+except KeyboardInterrupt:
+    pass
 
 finally:
-    print_msg(codes, file_size)
+    print_n(t_file_size, status)
